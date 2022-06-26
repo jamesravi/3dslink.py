@@ -1,5 +1,5 @@
 """
-3dslink.py - port of devkitPro's 3dslink to Python 
+3dslink.py - port of devkitPro's 3dslink to Python
 Copyright (C) 2022 James Ravindran
 
 This program is free software: you can redistribute it and/or modify
@@ -20,12 +20,7 @@ import socket
 import os
 import zlib
 import io
-
-HOST = "192.168.1.127"
-PORT = 17491
-CHUNK_SIZE = 16*1024
-
-filename = "afile.3dsx"
+import argparse
 
 def toInt32LE(n):
     return (n).to_bytes(4, byteorder="little")
@@ -33,20 +28,30 @@ def toInt32LE(n):
 def getInt32LE(s):
     return int.from_bytes(s.recv(4), byteorder="little")
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.connect((HOST, PORT))
-    
-    filenameend = filename.split("/")[-1]
-    s.sendall(toInt32LE(len(filenameend)))
-    s.sendall(filenameend.encode("ascii"))
-    s.sendall(toInt32LE(os.path.getsize(filename)))
-    assert getInt32LE(s) == 0
-    
-    with open(filename, "rb") as thefile:
-        compressed = io.BytesIO(zlib.compress(thefile.read()))
-    while True:
-        data = compressed.read(CHUNK_SIZE)
-        if not data:
-            break
-        s.sendall(toInt32LE(len(data)))
-        s.sendall(data)
+parser = argparse.ArgumentParser(description="Port of devkitPro's 3dslink to Python")
+parser.add_argument("-a", "--address", type=str, required=True)
+parser.add_argument("filename", type=str)
+args = parser.parse_args()
+
+def send_3dsx(filename, host, port=17491, chunk_size=16*1024):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((host, port))
+        
+        filenameend = filename.split("/")[-1]
+        s.sendall(toInt32LE(len(filenameend)))
+        s.sendall(filenameend.encode("ascii"))
+        s.sendall(toInt32LE(os.path.getsize(filename)))
+        assert getInt32LE(s) == 0
+        
+        with open(filename, "rb") as thefile:
+            compressed = io.BytesIO(zlib.compress(thefile.read()))
+        while True:
+            data = compressed.read(chunk_size)
+            if not data:
+                break
+            s.sendall(toInt32LE(len(data)))
+            s.sendall(data)
+
+if __name__ == "__main__":
+    send_3dsx(args.filename, args.address)
+

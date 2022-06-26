@@ -4,6 +4,7 @@ Port of [devkitPro's 3dslink](https://github.com/devkitPro/3dslink/blob/master/h
 ## Features/roadmap
 - [x] Do the absolute bare minimum (upload a .3dsx file successfully to a 3DS)
 - [ ] Make a command line interface (so no parameters are hardcoded)
+- [ ] Print some output (currently the script prints nothing)
 - [ ] Handle errors properly (currently nearly all errors are ignored so either this script and/or the 3DS crashes if they occur)
 
 ## License
